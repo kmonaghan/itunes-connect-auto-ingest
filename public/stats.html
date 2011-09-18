@@ -1,0 +1,146 @@
+<html>
+  <head>
+  	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css"></link>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+ 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>   
+    <script type="text/javascript">
+		google.load("visualization", "1", {packages:["corechart", "geochart"]});
+
+		function buildOptions(items)
+		{
+			var options = '<option value="0">All</option>';
+
+			$.each(items.apps, function(i,item){
+				options += '<option value="' + i + '">' + item + '</option>';
+			});
+
+			$('#app-selection').append('<select id="app-select">' + options + '</select>');
+			$('#app-selection').append('<select id="download-type"><option value="0">All</option><option value="1" selected>Downloads</option><option value="7">Updates</option></select>');
+		}
+      
+		function drawChart(items) 
+		{
+			var data = new google.visualization.DataTable();
+			data.addColumn('string', 'Day');
+
+			var appPosition = new Array();
+
+			var count = 1;
+			$.each(items.apps, function(i,item){
+				data.addColumn('number', item);
+				appPosition[i] = count;
+				count++;
+			});
+
+			data.addRows(items.total);
+       
+			count = 0;
+			$.each(items.data, function(i,dateitem){
+				data.setValue(count, 0, i);
+       	
+				$.each(dateitem, function(i,item){
+					data.setValue(count, appPosition[i], parseInt(item.units));
+				});
+
+				count++;
+			});      
+
+			$('#from').val(items.start_date);
+			$('#to').val(items.end_date);
+  		
+			var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+			chart.draw(data, {width: 980, height: 480, title: items.title});
+		}
+
+		function drawRegionsMap(items) 
+		{
+			var data = new google.visualization.DataTable();
+			data.addRows(items.data.length);
+			data.addColumn('string', 'Country');
+			data.addColumn('number', 'Popularity');
+
+			var count = 0;
+			$.each(items.data, function(i,item){
+				data.setValue(i, 0, item.country_code);
+				data.setValue(i, 1, parseInt(item.units));
+				count++;
+			});
+          
+			var options = {};
+
+			var container = document.getElementById('map_canvas');
+			var geochart = new google.visualization.GeoChart(container);
+			geochart.draw(data, {width: 600, height: 480});
+		};
+
+		function getAppGraph(data)
+		{
+			$.getJSON('ajax/daily.php', data, function(data) {
+				buildOptions(data);
+				drawChart(data);
+			});
+		}
+
+		function updateChart()
+		{
+			var params = {apple_identifier: $('#app-select').val(), 
+							product_type_identifier:$('#download-type').val(),
+							from: $('#from').val(),
+							to: $('#to').val(),
+						};
+    		
+			$.getJSON('ajax/daily.php', params, function(data) {
+						drawChart(data);
+			});
+		}
+          
+		$(document).ready(function() {
+			getAppGraph({});
+
+			/*
+			$.getJSON('ajax/region.php', function(data) {
+				drawRegionsMap(data);
+			});
+			*/
+			$('#app-select, #download-type').live('change', function() {
+				updateChart();
+    		});
+
+			$('#view').live('click', function() {
+				updateChart();
+    		});
+    	});
+
+		$(function() {
+			var dates = $( "#from, #to" ).datepicker({
+				defaultDate: "+1w",
+				maxDate: "-1D",
+				changeMonth: true,
+				numberOfMonths: 1,
+				dateFormat: 'dd/mm/yy',
+				onSelect: function( selectedDate ) {
+					var option = this.id == "from" ? "minDate" : "maxDate",
+						instance = $( this ).data( "datepicker" ),
+						date = $.datepicker.parseDate(
+							instance.settings.dateFormat ||
+							$.datepicker._defaults.dateFormat,
+							selectedDate, instance.settings );
+					dates.not( this ).datepicker( "option", option, date );
+				}
+			});
+		});
+    </script>
+  </head>
+
+  <body>
+  	<div id="app-selection"></div>
+  	<label for="from">From</label>
+	<input type="text" id="from" name="from"/>
+	<label for="to">to</label>
+	<input type="text" id="to" name="to"/>
+	<input type="button" id="view" value="View" />
+    <div id="chart_div"></div>
+    <div id='map_canvas'></div>
+  </body>
+</html>
