@@ -1,7 +1,7 @@
 <?php
 include '../boot.php';
 
-$sql = 'SELECT DISTINCT daily_summary.apple_identifier, title FROM daily_summary INNER JOIN daily_raw ON (daily_summary.apple_identifier = daily_raw.apple_identifier) ORDER BY title';
+$sql = 'SELECT DISTINCT apple_identifier, title FROM daily_raw ORDER BY title';
 
 foreach ($dbh->query($sql) as $row) {
 	$apps[$row['apple_identifier']] = $row['title'];
@@ -11,7 +11,7 @@ $params = array();
 $data = array();
 
 //By default, we're only going to look back 2 weeks, not including today
-$startTime = strtotime('15 days ago');
+$startTime = strtotime('32 days ago');
 $startDate = date('Y-m-d', $startTime);
 $endTime = strtotime('yesterday');
 $endDate = date('Y-m-d', $endTime);
