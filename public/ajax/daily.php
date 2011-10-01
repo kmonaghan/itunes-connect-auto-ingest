@@ -12,7 +12,35 @@ $data = array();
 
 $productType = (isset($_GET['product_type_identifier']) && $_GET['product_type_identifier']) ? (int)$_GET['product_type_identifier'] : 1;
 
-$params[] = $productType;
+if (!isset($_GET['apptype']) || !$_GET['apptype'])
+{
+	$params[] = $productType;		//iPhone apps
+	$params[] = $productType . 'F'; //Universal apps
+	$params[] = $productType . 'T'; //iPad apps
+	$params[] = 'F' . $productType; //Mac apps
+	
+	$where = ' product_type_identifier in (?, ?, ?, ?)';
+}
+else 
+{
+	switch($_GET['apptype'])
+	{
+		case 1:
+			$params[] = $productType;
+			break;
+		case 2:
+			$params[] = $productType . 'F';		
+			break;
+		case 3:
+			$params[] = $productType . 'T';		
+			break;
+		case 4:
+			$params[] = 'F' . $productType;		
+			break;
+	}
+
+	$where = ' product_type_identifier = ?';
+}
 
 $downloadType = ($productType == 1) ? 'downloads' : 'updates';
 
@@ -46,7 +74,7 @@ $params[] = $startDate;
 $params[] = $endDate;
 
 $query = '';
-$where = ' product_type_identifier = ? AND (begin_date >= ? AND begin_date <= ?) ';
+$where .= ' AND (begin_date >= ? AND begin_date <= ?) ';
 
 if (isset($_GET['apple_identifier']) && isset($apps[$_GET['apple_identifier']]))
 {
@@ -81,12 +109,17 @@ $query = "SELECT sum(units) as units, apple_identifier, begin_date FROM daily_ra
 
 $sth_total = $dbh->prepare($query);
 
+$profitquery = "SELECT units, developer_proceeds, customer_currency, apple_identifier FROM daily_raw " . $where . ' AND developer_proceeds > 0';
+
+$sth_proceeds = $dbh->prepare($profitquery);
+
 if (count($params))
 {
 	$count = 1;
 	foreach ($params as $value)
 	{
 		$sth_total->bindValue($count, $value);
+		$sth_proceeds->bindValue($count, $value);
 		$count++;
 	}
 }
@@ -98,8 +131,21 @@ while ($row = $sth_total->fetch(PDO::FETCH_ASSOC))
 	$data[$row['begin_date']][$row['apple_identifier']] = array('units' => $row['units']);
 }
 
+$sth_proceeds->execute();
+
+$proceeds = array();
+
+while ($row = $sth_proceeds->fetch(PDO::FETCH_ASSOC))
+{
+	if (!isset($proceeds[$row['apple_identifier']]))
+	{
+		$proceeds[$row['apple_identifier']][$row['customer_currency']] = 0;	
+	}
+	$proceeds[$row['apple_identifier']][$row['customer_currency']] += $row['developer_proceeds'] * $row['units'];
+}
+
 header('Cache-Control: no-cache, must-revalidate');
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 header('Content-type: application/json');
 
-echo json_encode(array('apps' => $apps, 'data' => $data, 'total' => count($data), 'title' => $title, 'start_date' => date('d/m/Y',$startTime), 'end_date' => date('d/m/Y',$endTime)));
+echo json_encode(array('apps' => $apps, 'data' => $data, 'proceeds' => $proceeds, 'total' => count($data), 'title' => $title, 'start_date' => date('d/m/Y',$startTime), 'end_date' => date('d/m/Y',$endTime)));

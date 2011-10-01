@@ -7,12 +7,16 @@
     <script type="text/javascript">
 		google.load("visualization", "1", {packages:["corechart", "geochart"]});
 
+		var appNames = new Array();
+		
 		function buildOptions(items)
 		{
 			var options = '<option value="0">All</option>';
-
+			
+			
 			$.each(items.apps, function(i,item){
 				options += '<option value="' + i + '">' + item + '</option>';
+				appNames[i] = item;
 			});
 
 			$('#app-selection').append('<select id="app-select">' + options + '</select>');
@@ -51,6 +55,22 @@
   		
 			var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 			chart.draw(data, {width: 980, height: 480, title: items.title});
+
+			var proceeds = '';
+			$.each(items.proceeds, function(i,bought) {
+				
+				proceedsSection = '<tr><td colspan="2">' + appNames[i] +'</tr>';
+				$.each(bought, function(currency,amount){
+					proceedsSection += '<tr><td>' + currency + '</td><td>' + amount +'</td></tr>';
+				});
+
+				proceeds += proceedsSection;
+			}); 
+
+			if (proceeds)
+			{
+				$('#proceeds').html('<table>' + proceeds + '</table>');
+			}
 		}
 
 		function drawRegionsMap(items) 
@@ -84,7 +104,8 @@
 
 		function updateChart()
 		{
-			var params = {apple_identifier: $('#app-select').val(), 
+			var params = {apptype: $('#app-type').val(),
+							apple_identifier: $('#app-select').val(), 
 							product_type_identifier:$('#download-type').val(),
 							from: $('#from').val(),
 							to: $('#to').val(),
@@ -94,23 +115,6 @@
 						drawChart(data);
 			});
 		}
-          
-		$(document).ready(function() {
-			getAppGraph({});
-
-			/*
-			$.getJSON('ajax/region.php', function(data) {
-				drawRegionsMap(data);
-			});
-			*/
-			$('#app-select, #download-type').live('change', function() {
-				updateChart();
-    		});
-
-			$('#view').live('click', function() {
-				updateChart();
-    		});
-    	});
 
 		$(function() {
 			var dates = $( "#from, #to" ).datepicker({
@@ -130,10 +134,34 @@
 				}
 			});
 		});
+		
+		$(document).ready(function() {
+			getAppGraph({});
+
+			/*
+			$.getJSON('ajax/region.php', function(data) {
+				drawRegionsMap(data);
+			});
+			*/
+			$('#app-select, #download-type, #app-type').live('change', function() {
+				updateChart();
+    		});
+
+			$('#view').live('click', function() {
+				updateChart();
+    		});
+    	});
     </script>
   </head>
 
   <body>
+	<select id="app-type">
+		<option value='0'>All</option>
+		<option value='1'>iPhone only</option>
+		<option value='2'>Universal</option>
+		<option value='3'>iPad</option>
+		<option value='4'>Mac</option>
+	</select>
   	<div id="app-selection"></div>
   	<label for="from">From</label>
 	<input type="text" id="from" name="from"/>
@@ -141,6 +169,7 @@
 	<input type="text" id="to" name="to"/>
 	<input type="button" id="view" value="View" />
     <div id="chart_div"></div>
+    <div id="proceeds"></div>
     <div id='map_canvas'></div>
   </body>
 </html>
