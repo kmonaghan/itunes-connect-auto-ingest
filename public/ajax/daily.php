@@ -49,7 +49,7 @@ if (isset($_GET['from']))
 	$parts = explode('/', $_GET['from']);
 	$startTime = strtotime($parts[2] . '-' . $parts[1] . '-' . $parts[0]);
 }
-else 
+else
 {
 	$startTime = strtotime('32 days ago');
 }
@@ -81,7 +81,7 @@ if (isset($_GET['apple_identifier']) && isset($apps[$_GET['apple_identifier']]))
 	$where .= ' AND apple_identifier = ?';
 
 	$params[] = $_GET['apple_identifier'];
-	
+
 	$apps = array($_GET['apple_identifier'] => $apps[$_GET['apple_identifier']]);
 }
 
@@ -90,12 +90,12 @@ $currentTime = $startTime;
 while($currentTime <= $endTime)
 {
 	$currentDate = date('Y-m-d', $currentTime);
-	
+
 	foreach($apps as $appleIdentifier => $value)
 	{
-		$data[$currentDate][$appleIdentifier] = array('units' => 0);	
+		$data[$currentDate][$appleIdentifier] = array('units' => 0);
 	}
-	
+
 	$currentTime = strtotime('+1 day', $currentTime);
 }
 $where = ($where) ? ' WHERE ' . $where : '';
@@ -105,7 +105,11 @@ $group = ' GROUP BY apple_identifier, begin_date';
 $order = ' ORDER BY begin_date';
 
 
-$query = "SELECT sum(units) as units, apple_identifier, begin_date FROM daily_raw " . $where . $group . $order;
+$totalquery = "SELECT sum(units) as units, apple_identifier FROM daily_raw " . $where . ' GROUP BY apple_identifier ORDER BY units DESC';
+
+$sth_overalltotals = $dbh->prepare($totalquery);
+
+$query = "SELECT sum(units) as units, apple_identifier, begin_date FROM daily_raw " . $where . ' ' . $group . $order;
 
 $sth_total = $dbh->prepare($query);
 
@@ -120,8 +124,16 @@ if (count($params))
 	{
 		$sth_total->bindValue($count, $value);
 		$sth_proceeds->bindValue($count, $value);
+		$sth_overalltotals->bindValue($count, $value);
 		$count++;
 	}
+}
+
+$totals = array();
+$sth_overalltotals->execute();
+while ($row = $sth_overalltotals->fetch(PDO::FETCH_ASSOC))
+{
+	$totals[$row['apple_identifier']] = (int)$row['units'];
 }
 
 $sth_total->execute();
@@ -148,4 +160,4 @@ header('Cache-Control: no-cache, must-revalidate');
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 header('Content-type: application/json');
 
-echo json_encode(array('apps' => $apps, 'data' => $data, 'proceeds' => $proceeds, 'total' => count($data), 'title' => $title, 'start_date' => date('d/m/Y',$startTime), 'end_date' => date('d/m/Y',$endTime)));
+echo json_encode(array('apps' => $apps, 'data' => $data, 'proceeds' => $proceeds, 'totals' => $totals, 'total' => count($data), 'title' => $title, 'start_date' => date('d/m/Y',$startTime), 'end_date' => date('d/m/Y',$endTime)));

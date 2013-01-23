@@ -3,7 +3,9 @@
   	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css"></link>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
- 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>   
+ 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script> 
+ 	<script type="text/javascript" src="js/jshashtable.js"></script> 
+ 	<script type="text/javascript" src="js/jquery.numberformatter-1.2.2.js"></script>   
     <script type="text/javascript">
 		google.load("visualization", "1", {packages:["corechart", "geochart"]});
 
@@ -25,15 +27,21 @@
       
 		function drawChart(items) 
 		{
+			$('#app_list').empty();
+			
 			var data = new google.visualization.DataTable();
 			data.addColumn('string', 'Day');
 
 			var appPosition = new Array();
-
+			var appName = new Array();
+			var totals =  new Array();
 			var count = 1;
+			
 			$.each(items.apps, function(i,item){
 				data.addColumn('number', item);
 				appPosition[i] = count;
+				appName[i] = item;
+				totals[i] = 0;
 				count++;
 			});
 
@@ -45,6 +53,7 @@
        	
 				$.each(dateitem, function(i,item){
 					data.setValue(count, appPosition[i], parseInt(item.units));
+					totals[i] += parseInt(item.units);
 				});
 
 				count++;
@@ -56,6 +65,10 @@
 			var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 			chart.draw(data, {width: 980, height: 480, title: items.title});
 
+			$.each(items.totals, function(i,total){
+				$('#app_list').append('<tr><td><div class="view_app" id="' + i + '">' + appName[i] + '</div></td><td>' + total + '</td>');
+			}); 
+			
 			var proceeds = '';
 			$.each(items.proceeds, function(i,bought) {
 				
@@ -150,8 +163,19 @@
 			$('#view').live('click', function() {
 				updateChart();
     		});
+    		
+    		$('.view_app').live('click', function() {
+				$("#app-select").val($(this).attr('id'));
+				updateChart();	
+			});
     	});
     </script>
+<style type="text/css">
+.view_app {
+	color: blue;
+	cursor: pointer
+}
+</style>
   </head>
 
   <body>
@@ -169,7 +193,9 @@
 	<input type="text" id="to" name="to"/>
 	<input type="button" id="view" value="View" />
     <div id="chart_div"></div>
+    <table id="app_list"></table>
     <div id="proceeds"></div>
     <div id='map_canvas'></div>
+    
   </body>
 </html>
