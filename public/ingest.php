@@ -110,6 +110,7 @@ function process($time)
 		else
 		{
 			echo 'File is of size 0' . PHP_EOL;
+			unlink("$filename.gz");
 		}
 	}
 	
