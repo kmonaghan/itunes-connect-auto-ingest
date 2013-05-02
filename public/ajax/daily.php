@@ -18,8 +18,9 @@ if (!isset($_GET['apptype']) || !$_GET['apptype'])
 	$params[] = $productType . 'F'; //Universal apps
 	$params[] = $productType . 'T'; //iPad apps
 	$params[] = 'F' . $productType; //Mac apps
+	$params[] = 'IA' . $productType; //In-apps
 	
-	$where = ' product_type_identifier in (?, ?, ?, ?)';
+	$where = ' product_type_identifier in (?, ?, ?, ?, ?)';
 }
 else 
 {
@@ -36,6 +37,9 @@ else
 			break;
 		case 4:
 			$params[] = 'F' . $productType;		
+			break;
+		case 5:
+			$params[] = 'IA' . $productType;		
 			break;
 	}
 
