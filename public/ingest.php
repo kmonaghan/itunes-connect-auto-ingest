@@ -66,9 +66,12 @@ function process($time)
 		fclose($fp);
 
 		if (filesize("$filename.gz"))
-		{
-			exec("gunzip $filename.gz");
-			
+        {
+            if (function_exists('gzdecode')) {
+                file_put_contents($filename, gzdecode(file_get_contents("$filename.gz")) );
+            } else {
+			    exec("gunzip $filename.gz");
+            }
 
 			if (($handle = fopen("$filename", "r")) !== FALSE)
 			{
