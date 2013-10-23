@@ -5,4 +5,4 @@
 
 ## License
 
-The Broadsheet.ie Android App is available under the MIT license. See the LICENSE file for more info.
+The itunes-connect-auto-ingest is available under the MIT license. See the LICENSE file for more info.
