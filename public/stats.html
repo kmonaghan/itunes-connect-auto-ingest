@@ -1,12 +1,45 @@
 <html>
   <head>
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
   	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css"></link>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
  	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script> 
  	<script type="text/javascript" src="js/jshashtable.js"></script> 
  	<script type="text/javascript" src="js/jquery.numberformatter-1.2.2.js"></script>   
-    <script type="text/javascript">
+	<script type="text/javascript">
+// From: http://james.padolsey.com/javascript/parsing-urls-with-the-dom/
+// This function creates a new anchor element and uses location
+// properties (inherent) to get the desired URL data. Some String
+// operations are used (to normalize results across browsers).
+ 
+function parseURL(url) {
+    var a =  document.createElement('a');
+    a.href = url;
+    return {
+        source: url,
+        protocol: a.protocol.replace(':',''),
+        host: a.hostname,
+        port: a.port,
+        query: a.search,
+        params: (function(){
+            var ret = {},
+                seg = a.search.replace(/^\?/,'').split('&'),
+                len = seg.length, i = 0, s;
+            for (;i<len;i++) {
+                if (!seg[i]) { continue; }
+                s = seg[i].split('=');
+                ret[s[0]] = s[1];
+            }
+            return ret;
+        })(),
+        file: (a.pathname.match(/\/([^\/?#]+)$/i) || [,''])[1],
+        hash: a.hash.replace('#',''),
+        path: a.pathname.replace(/^([^\/])/,'/$1'),
+        relative: (a.href.match(/tps?:\/\/[^\/]+(.+)/) || [,''])[1],
+        segments: a.pathname.replace(/^\//,'').split('/')
+    };
+}
 		google.load("visualization", "1", {packages:["corechart", "geochart"]});
 
 		var appNames = new Array();
@@ -123,7 +156,10 @@
 							from: $('#from').val(),
 							to: $('#to').val(),
 						};
-    		
+    	
+
+                        $('#stats-url').val(currentUrl.protocol + '://' + currentUrl.host + currentUrl.path + '?' + decodeURIComponent($.param(params)));
+	
 			$.getJSON('ajax/daily.php', params, function(data) {
 						drawChart(data);
 			});
@@ -147,9 +183,14 @@
 				}
 			});
 		});
+
+		var currentUrl = parseURL(document.URL);
 		
 		$(document).ready(function() {
-			getAppGraph({});
+
+			$('#stats-url').val(document.URL);
+		
+			getAppGraph(currentUrl.params);
 
 			/*
 			$.getJSON('ajax/region.php', function(data) {
@@ -185,6 +226,7 @@
 		<option value='2'>Universal</option>
 		<option value='3'>iPad</option>
 		<option value='4'>Mac</option>
+		<option value='5'>In-apps</option>
 	</select>
   	<div id="app-selection"></div>
   	<label for="from">From</label>
@@ -192,6 +234,9 @@
 	<label for="to">to</label>
 	<input type="text" id="to" name="to"/>
 	<input type="button" id="view" value="View" />
+	<br />
+	URL: <input type="text" id="stats-url" name="stats-url" value="" size="100" />
+
     <div id="chart_div"></div>
     <table id="app_list"></table>
     <div id="proceeds"></div>
