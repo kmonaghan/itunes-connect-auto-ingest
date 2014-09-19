@@ -31,7 +31,7 @@ function process($time)
 
 	global $dbh, $ch, $accounts;
 
-	$sth = $dbh->prepare ("INSERT INTO `daily_raw` (`provider`, `provider_country`, `sku`, `developer`, `title`, `version`, `product_type_identifier`, `units`, `developer_proceeds`, `begin_date`, `end_date`, `customer_currency`, `country_code`, `currency_proceeds`, `apple_identifier`, `customer_price`, `promo_code`, `parent_identifier`, `subscription`, `period`, `category`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");	
+	$sth = $dbh->prepare ("INSERT INTO `daily_raw` (`provider`, `provider_country`, `sku`, `developer`, `title`, `version`, `product_type_identifier`, `units`, `developer_proceeds`, `begin_date`, `end_date`, `customer_currency`, `country_code`, `currency_proceeds`, `apple_identifier`, `customer_price`, `promo_code`, `parent_identifier`, `subscription`, `period`, `category`, `cmb`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");	
 			
 	foreach($accounts as $account)
 	{

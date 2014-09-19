@@ -5,9 +5,9 @@
 # http://www.sequelpro.com/
 # http://code.google.com/p/sequel-pro/
 #
-# Host: localhost (MySQL 5.5.28)
-# Database: ios
-# Generation Time: 2013-10-23 14:18:37 +0000
+# Host: 127.0.0.1 (MySQL 5.5.35-0ubuntu0.12.10.2)
+# Database: itunes_test
+# Generation Time: 2014-09-19 14:03:43 +0000
 # ************************************************************
 
 
@@ -43,15 +43,13 @@ CREATE TABLE `daily_raw` (
   `currency_proceeds` char(3) DEFAULT NULL,
   `apple_identifier` decimal(18,0) DEFAULT NULL,
   `customer_price` decimal(18,2) DEFAULT NULL,
-  `promo_code` varchar(10) DEFAULT ' ',
-  `parent_identifier` varchar(100) DEFAULT ' ',
-  `subscription` varchar(10) DEFAULT ' ',
-  `period` varchar(30) DEFAULT ' ',
+  `promo_code` varchar(10) DEFAULT NULL,
+  `parent_identifier` varchar(100) DEFAULT NULL,
+  `subscription` varchar(10) DEFAULT NULL,
+  `period` varchar(30) DEFAULT NULL,
   `category` varchar(30) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `apple_identifier` (`apple_identifier`),
-  KEY `begin_date` (`begin_date`),
-  KEY `product_type_identifier` (`product_type_identifier`)
+  `cmb` varchar(30) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 
