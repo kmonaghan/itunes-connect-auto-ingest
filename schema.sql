@@ -49,6 +49,8 @@ CREATE TABLE `daily_raw` (
   `period` varchar(30) DEFAULT NULL,
   `category` varchar(30) DEFAULT NULL,
   `cmb` varchar(30) DEFAULT NULL,
+  `supported_platforms` varchar(12) DEFAULT NULL,
+  `devices` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
